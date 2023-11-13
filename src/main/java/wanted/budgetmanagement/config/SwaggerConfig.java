@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
-        info = @Info(title = "sns",
+        info = @Info(title = "budget-management",
                 version = "v1")
 )
 @Configuration
