@@ -52,7 +52,7 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
-    public static UserDetails fromEntity(UserEntity entity){
+    public static UserDetails fromEntity(User entity){
         return CustomUserDetails.builder()
                 .id(entity.getId())
                 .username(entity.getUsername())

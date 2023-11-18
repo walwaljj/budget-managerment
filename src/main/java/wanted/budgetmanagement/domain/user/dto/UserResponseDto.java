@@ -3,7 +3,7 @@ package wanted.budgetmanagement.domain.user.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
-import wanted.budgetmanagement.domain.user.entity.UserEntity;
+import wanted.budgetmanagement.domain.user.entity.User;
 
 @Builder
 @Getter
@@ -13,9 +13,9 @@ public class UserResponseDto {
     private String username;
     private String email;
 
-    public static UserResponseDto fromEntity(UserEntity userEntity){
+    public static UserResponseDto fromEntity(User User){
         return UserResponseDto.builder()
-                .username(userEntity.getUsername())
-                .email(userEntity.getEmail()).build();
+                .username(User.getUsername())
+                .email(User.getEmail()).build();
     }
 }

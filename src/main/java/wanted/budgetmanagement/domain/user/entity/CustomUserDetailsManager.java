@@ -27,10 +27,10 @@ public class CustomUserDetailsManager implements UserDetailsManager {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        UserEntity userEntity = userRepository.findByUsername(username).orElseThrow(() ->
+        User User = userRepository.findByUsername(username).orElseThrow(() ->
                 new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        return CustomUserDetails.fromEntity(userEntity);
+        return CustomUserDetails.fromEntity(User);
     }
 
     @Override

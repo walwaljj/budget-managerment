@@ -12,7 +12,7 @@ import wanted.budgetmanagement.config.security.jwt.JwtUtils;
 import wanted.budgetmanagement.domain.user.dto.UserRequestDto;
 import wanted.budgetmanagement.domain.user.dto.UserResponseDto;
 import wanted.budgetmanagement.domain.user.entity.CustomUserDetailsManager;
-import wanted.budgetmanagement.domain.user.entity.UserEntity;
+import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.exception.CustomException;
 import wanted.budgetmanagement.exception.ErrorCode;
 import wanted.budgetmanagement.repository.UserRepository;
@@ -41,12 +41,12 @@ public class UserService {
             throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
         }
 
-        UserEntity userEntity = UserEntity.builder()
+        User user = User.builder()
                 .username(userRequestDto.getUsername())
                 .password(passwordEncoder.passwordEncoder().encode(userRequestDto.getPassword()))
                 .email((userRequestDto).getEmail())
                 .build();
-        return UserResponseDto.fromEntity(userRepository.save(userEntity));
+        return UserResponseDto.fromEntity(userRepository.save(user));
 
     }
 
