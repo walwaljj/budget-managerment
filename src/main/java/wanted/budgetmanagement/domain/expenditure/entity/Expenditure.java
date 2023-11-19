@@ -37,8 +37,8 @@ public class Expenditure {
 
 
     // 지출 카테고리와 메모를 수정 할 수 있도록 하는 메서드
-    public void modify(ExpenditureRequestDto requestDto){
-        this.category = requestDto.getCategory();
-        this.memo = requestDto.getMemo();
+    public void modify(String category, String memo){
+        this.category = Category.valueOf(category);
+        this.memo = memo;
     }
 }
