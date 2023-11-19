@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import wanted.budgetmanagement.config.security.PasswordEncoderConfig;
 import wanted.budgetmanagement.domain.Category;
-import wanted.budgetmanagement.domain.Expenditure;
+import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;

@@ -1,10 +1,12 @@
-package wanted.budgetmanagement.domain;
+package wanted.budgetmanagement.domain.expenditure.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import wanted.budgetmanagement.domain.Category;
+import wanted.budgetmanagement.domain.expenditure.dto.ExpenditureRequestDto;
 
 import java.time.LocalDate;
 
@@ -34,5 +36,9 @@ public class Expenditure {
     private String memo; // 지출 메모
 
 
-
+    // 지출 카테고리와 메모를 수정 할 수 있도록 하는 메서드
+    public void modify(ExpenditureRequestDto requestDto){
+        this.category = requestDto.getCategory();
+        this.memo = requestDto.getMemo();
+    }
 }
