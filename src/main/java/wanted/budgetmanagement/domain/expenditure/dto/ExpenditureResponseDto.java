@@ -1,5 +1,6 @@
 package wanted.budgetmanagement.domain.expenditure.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 @Builder(toBuilder = true)
 public class ExpenditureResponseDto {
 
+    @JsonIgnore
     private Integer userId;
 
     @Enumerated(EnumType.STRING)
@@ -28,7 +30,7 @@ public class ExpenditureResponseDto {
     private String memo; // 지출 메모
 
     // entity 를 dto 로 변환하는 정적 메서드
-    public static ExpenditureResponseDto toResponseDto(Expenditure expenditure){
+    public static ExpenditureResponseDto toResponseDto(Expenditure expenditure) {
         return ExpenditureResponseDto.builder()
                 .userId(expenditure.getUserId())
                 .category(expenditure.getCategory())

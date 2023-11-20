@@ -1,5 +1,6 @@
 package wanted.budgetmanagement.repository;
 
+import wanted.budgetmanagement.domain.expenditure.dto.TotalAmountResponseDto;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 
 import java.time.LocalDate;
@@ -12,4 +13,8 @@ public interface ExpenditureRepositoryCustom {
                              Integer min,
                              Integer max,
                              List<String> exceptCategory);
+
+    List<TotalAmountResponseDto> totalAmount(List<Expenditure> expenditureList);
+
+    Integer todayTotalAmount(LocalDate date);
 }
