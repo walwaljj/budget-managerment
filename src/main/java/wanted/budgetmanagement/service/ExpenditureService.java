@@ -12,6 +12,10 @@ import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 import wanted.budgetmanagement.exception.ErrorCode;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -42,12 +46,8 @@ public class ExpenditureService {
     @Transactional
     public void delete(String username, Long expenditureId){
 
-        User user = findUserByUsername(username);
-
-        Expenditure expenditure = findExpenditureById(expenditureId);
-
         // 유저의 권한 확인
-        checkPermissions(user, expenditure);
+        Expenditure expenditure = checkPermissions(username, expenditureId);
 
         expenditureRepository.delete(expenditure);
     }
@@ -74,13 +74,19 @@ public class ExpenditureService {
     }
 
     /**
-     * 로그인한 유저의 지출 내역에 대한 권한 확인
+     * 로그인한 유저의 지출 내역에 대한 권한 확인, 맞다면 Expenditure 반환
      */
-    public boolean checkPermissions(User user, Expenditure expenditure){
+    public Expenditure checkPermissions(String username, Long expenditureId){
+
+        User user = findUserByUsername(username);
+
+        Expenditure expenditure = findExpenditureById(expenditureId);
+
         if(!user.getId().equals(expenditure.getUserId())){
             throw new CustomException(ErrorCode.INVALID_PERMISSION);
         }
-        return true;
+
+        return expenditure;
     }
 
 
@@ -94,15 +100,59 @@ public class ExpenditureService {
     @Transactional
     public ExpenditureResponseDto update(String username, Long expenditureId, String category, String memo) {
 
-        User user = findUserByUsername(username);
-
-        Expenditure expenditure = findExpenditureById(expenditureId);
-
-        checkPermissions(user, expenditure);
+        // 유저의 권한 확인
+        Expenditure expenditure = checkPermissions(username, expenditureId);
 
         // 지출 내역 수정
         expenditure.modify(category, memo);
 
         return ExpenditureResponseDto.toResponseDto(expenditureRepository.save(expenditure));
+    }
+
+    /**
+     * 지출 내역 상세 조회
+     * @param username
+     * @param expenditureId
+     * @return
+     */
+    public ExpenditureResponseDto detail(String username, Long expenditureId) {
+
+        // 유저의 권한 확인 및 지출 내역 반환
+        Expenditure expenditure = checkPermissions(username, expenditureId);
+
+        return ExpenditureResponseDto.toResponseDto(expenditure);
+    }
+
+    /**
+     * 로그인 한 사용자의 지출 목록 조회
+     * @param username
+     * @return
+     */
+    public List<ExpenditureResponseDto> expenditureList(String username) {
+
+        User user = findUserByUsername(username);
+
+        Optional<List<Expenditure>> expenditureList = expenditureRepository.findAllByUserId(user.getId());
+
+        // 만약 userId 로 찾은 지출 목록의 결과가 비어있다면 notfound 반환
+        if(expenditureList.isEmpty()){
+            throw new CustomException(ErrorCode.EXPENDITURE_NOT_FOUND);
+        }
+
+        return expenditureList.get().stream().map(ExpenditureResponseDto::toResponseDto).toList();
+    }
+
+    public List<ExpenditureResponseDto> search(String username, String category, LocalDate date, Integer min, Integer max, List<String> exceptCategory) {
+
+        User user = findUserByUsername(username);
+
+        Optional<List<Expenditure>> expenditureList = expenditureRepository.findAllByUserId(user.getId());
+
+        // 만약 userId 로 찾은 지출 목록의 결과가 비어있다면 notfound 반환
+        if(expenditureList.isEmpty()){
+            throw new CustomException(ErrorCode.EXPENDITURE_NOT_FOUND);
+        }
+
+        return expenditureList.get().stream().map(ExpenditureResponseDto::toResponseDto).toList();
     }
 }
