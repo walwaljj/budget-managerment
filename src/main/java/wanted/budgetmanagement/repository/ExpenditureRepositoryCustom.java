@@ -14,7 +14,11 @@ public interface ExpenditureRepositoryCustom {
                              Integer max,
                              List<String> exceptCategory);
 
-    List<TotalAmountResponseDto> totalAmount(List<Expenditure> expenditureList);
+    List<Expenditure> searchByDate(LocalDate date);
 
-    Integer todayTotalAmount(LocalDate date);
+    List<TotalAmountResponseDto> totalAmountListByCategory(List<Expenditure> expenditureList);
+
+    List<TotalAmountResponseDto> totalAmountListByCategory(LocalDate date);
+
+    Integer totalAmountByDate(LocalDate startDate, LocalDate endDate);
 }

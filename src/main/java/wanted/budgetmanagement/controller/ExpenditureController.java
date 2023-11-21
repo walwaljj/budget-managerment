@@ -95,7 +95,7 @@ public class ExpenditureController {
     }
 
     @GetMapping("")
-    @Operation(summary = "지출 목록 조회", description = "지출 목록을 조회합니다.")
+    @Operation(summary = "지출 전체 목록 조회", description = "유저의 지출 전체 목록을 조회합니다.")
     public ResponseEntity<CommonResponse> expenditureList(
             Authentication auth
     ) {
@@ -153,6 +153,28 @@ public class ExpenditureController {
                 .responseCode(responseCode)
                 .code(responseCode.getCode())
                 .data(expenditureService.totalAmount(auth.getName(), category, date, min, max, exceptCategory))
+                .message(responseCode.getMessage())
+                .build());
+    }
+
+    @GetMapping("/statistics/month")
+        // 오늘이 월요일이면 지난 주 월요일에 대한 소비율
+        // 오늘 기준 다른 유저와의 소비율
+    @Operation(summary = "지출 통계", description = "지난달 대비 지출 통계를 조회합니다. 예 ) 오늘이 10일 이라면 지난달 1일~ 10일 까지 ")
+    public ResponseEntity<CommonResponse> expenditureStatisticsByLastMonth(
+            Authentication auth,
+            @RequestParam(value = "date", defaultValue = "today") String date
+    ) {
+
+        if (date.equals("today")) {
+            date = LocalDate.now().toString();
+        }
+        ResponseCode responseCode = ResponseCode.Expenditure_UPDATE;
+
+        return ResponseEntity.ok(CommonResponse.builder()
+                .responseCode(responseCode)
+                .code(responseCode.getCode())
+                .data(expenditureService.statisticsByLastMonth(auth.getName(), LocalDate.parse(date)))
                 .message(responseCode.getMessage())
                 .build());
     }

@@ -37,9 +37,22 @@ public class ExpenditureRepositoryImpl extends Querydsl4RepositorySupport implem
         return selectFrom(expenditure)
                 .where(
                         searchCategory(category),
-                        searchDate(date),
+                        searchDate(date, date),
                         searchAmountRange(min, max)
                 )
+                .fetch();
+    }
+
+    /**
+     * 날짜별 지출 목록을 조회
+     *
+     * @param date
+     * @return
+     */
+    @Override
+    public List<Expenditure> searchByDate(LocalDate date) {
+        return selectFrom(expenditure)
+                .where(searchDate(date.withDayOfMonth(1), date))
                 .fetch();
     }
 
@@ -49,7 +62,7 @@ public class ExpenditureRepositoryImpl extends Querydsl4RepositorySupport implem
      * @return List<TotalAmountResponseDto> // 카테고리 별 지출 합계
      */
     @Override
-    public List<TotalAmountResponseDto> totalAmount(List<Expenditure> expenditureList) {
+    public List<TotalAmountResponseDto> totalAmountListByCategory(List<Expenditure> expenditureList) {
 
         return select(Projections.constructor(TotalAmountResponseDto.class, expenditure.category, expenditure.amount.sum()))
                 .from(expenditure)
@@ -58,18 +71,30 @@ public class ExpenditureRepositoryImpl extends Querydsl4RepositorySupport implem
                 .fetch();
     }
 
+    @Override
+    public List<TotalAmountResponseDto> totalAmountListByCategory(LocalDate date) {
+
+        List<Expenditure> expenditureList = searchByDate(date);
+
+        return select(Projections.constructor(TotalAmountResponseDto.class, expenditure.category, expenditure.amount.sum()))
+                .from(expenditure)
+                .where(expenditure.in(expenditureList))
+                .groupBy(expenditure.category)
+                .fetch();
+    }
     /**
-     * 금일 지출 합계
+     * 요일에 따른 지출 합계
      *
-     * @param date
-     * @return Integer // 금일 지출 합계
+     * @param startDate
+     * @param endDate
+     * @return Integer // 지출 합계
      */
     @Override
-    public Integer todayTotalAmount(LocalDate date) {
+    public Integer totalAmountByDate(LocalDate startDate, LocalDate endDate) {
 
         return select(expenditure.amount.sum())
                 .from(expenditure)
-                .where(searchDate(date))
+                .where(searchDate(startDate, endDate))
                 .fetchOne();
     }
 
@@ -87,10 +112,11 @@ public class ExpenditureRepositoryImpl extends Querydsl4RepositorySupport implem
     /**
      * 기간으로 조회
      *
-     * @param date // 조회 기간
+     * @param startDate // 시작 기간
+     * @param endDate   // 마지막 기간
      */
-    private BooleanExpression searchDate(LocalDate date) {
-        return expenditure.date.eq(date);
+    private BooleanExpression searchDate(LocalDate startDate, LocalDate endDate) {
+        return expenditure.date.between(startDate, endDate);
     }
 
     /**

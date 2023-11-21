@@ -3,10 +3,8 @@ package wanted.budgetmanagement.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wanted.budgetmanagement.domain.expenditure.dto.ExpenditureRequestDto;
-import wanted.budgetmanagement.domain.expenditure.dto.ExpenditureResponseDto;
-import wanted.budgetmanagement.domain.expenditure.dto.ExpenditureTotalAmountResponseDto;
-import wanted.budgetmanagement.domain.expenditure.dto.TotalAmountResponseDto;
+import wanted.budgetmanagement.domain.Category;
+import wanted.budgetmanagement.domain.expenditure.dto.*;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.exception.CustomException;
@@ -15,6 +13,7 @@ import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -163,7 +162,7 @@ public class ExpenditureService {
 
         List<Expenditure> todayExpenditureList = getTodayExpenditureList(user, date);
 
-        Integer totalAmount = expenditureRepository.todayTotalAmount(date);
+        Integer totalAmount = expenditureRepository.totalAmountByDate(date, date);
 
         ExpenditureTotalAmountResponseDto expenditureTotalAmountResponseDto = ExpenditureTotalAmountResponseDto.builder()
                 .userId(user.getId())
@@ -233,9 +232,9 @@ public class ExpenditureService {
         List<Expenditure> searchExpenditureList = search(category, date, min, max, exceptCategory);
 
         // 검색 결과를 이용해 카테고리별 금액 표출
-        List<TotalAmountResponseDto> searchByCategoryAmountList = expenditureRepository.totalAmount(searchExpenditureList);
+        List<TotalAmountResponseDto> searchByCategoryAmountList = expenditureRepository.totalAmountListByCategory(searchExpenditureList);
 
-        Integer totalAmount = expenditureRepository.todayTotalAmount(LocalDate.now());
+        Integer totalAmount = expenditureRepository.totalAmountByDate(LocalDate.now(), LocalDate.now());
 
         ExpenditureTotalAmountResponseDto expenditureTotalAmountResponseDto = ExpenditureTotalAmountResponseDto.builder()
                 .userId(user.getId())
@@ -246,4 +245,76 @@ public class ExpenditureService {
 
         return expenditureTotalAmountResponseDto;
     }
+
+    /**
+     * 지출 통계 (지난 달 대비)
+     *
+     * @param username
+     * @param date
+     * @return
+     */
+    public ExpenditureStatisticsResponseDto statisticsByLastMonth(String username, LocalDate date) {
+
+        ExpenditureStatisticsResponseDto expenditureStatisticsResponseDto = new ExpenditureStatisticsResponseDto();
+
+        // 지난 달 1일 ~ n 일 까지 소비 총액 == 100%
+        LocalDate lastMonth = date.minusMonths(1);
+
+        Integer lastMonthTotalAmountByDate = expenditureRepository.totalAmountByDate(lastMonth.withDayOfMonth(1), lastMonth);
+
+        // 지난 달 1일 ~ n 일 까지 카테고리 별 소비 총액
+        List<TotalAmountResponseDto> lastMonthTotalAmountList = expenditureRepository.totalAmountListByCategory(lastMonth);
+
+        // 이번달 1일 ~ n 일 까지 소비 총액
+        Integer totalAmountByDate = expenditureRepository.totalAmountByDate(date.withDayOfMonth(1), date);
+
+        // 이번달 1일 ~ n 일 까지 카테고리 별 소비 총액
+        List<TotalAmountResponseDto> totalAmountList = expenditureRepository.totalAmountListByCategory(date);
+
+
+        // 소비율 : 이번달 총액 ( 지난달 총액 / 100 )
+        int rate = totalAmountByDate / (lastMonthTotalAmountByDate / 100);
+
+
+        // 카테고리 별 소비율
+        List<TotalAmountResponseDto> resultRateList = new ArrayList<>();
+
+        for (int i = 0; i < 2; i++) {
+
+            for (Category category : Category.values()) {
+
+                TotalAmountResponseDto lastMonthTotalAmountResponseDto = lastMonthTotalAmountList.get(i);
+                Integer lastMonthTotalAmount = lastMonthTotalAmountResponseDto.getAmount();
+
+                TotalAmountResponseDto totalAmountResponseDto = totalAmountList.get(i);
+                Integer thisMonthTotalAmount = totalAmountResponseDto.getAmount();
+
+                // 지난달 또는 이번달에 소비된 금액이 없다면 계산을 생략함.
+                if (lastMonthTotalAmount == null) {
+                    continue;
+                } else if (thisMonthTotalAmount == null) {
+                    continue;
+                }
+
+                TotalAmountResponseDto resultDto = TotalAmountResponseDto.builder()
+                        .category(category)
+                        .amount(thisMonthTotalAmount / (lastMonthTotalAmount / 100))
+                        .build();
+
+                resultRateList.add(resultDto);
+            }
+        }
+
+        return expenditureStatisticsResponseDto.builder()
+                .today(date)
+                .day(date.getDayOfWeek())
+                .startDate(date.withDayOfMonth(1))
+                .endDate(date)
+                .thisMonthTotalAmount(totalAmountByDate)
+                .searchedResultTotalAmount(lastMonthTotalAmountByDate)
+                .rate(rate)
+                .totalAmountByCategory(resultRateList)
+                .build();
+    }
+
 }
