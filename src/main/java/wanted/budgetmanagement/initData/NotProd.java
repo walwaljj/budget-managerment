@@ -4,9 +4,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.core.userdetails.UserDetails;
 import wanted.budgetmanagement.config.security.PasswordEncoderConfig;
 import wanted.budgetmanagement.domain.Category;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
+import wanted.budgetmanagement.domain.user.entity.CustomUserDetailsManager;
 import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
@@ -19,7 +21,7 @@ import java.util.List;
 @Profile({"dev", "test"})
 public class NotProd {
     @Bean
-    CommandLineRunner initData(UserRepository memberRepository,
+    CommandLineRunner initData(UserRepository userRepository,
                                ExpenditureRepository expenditureRepository) {
 
         PasswordEncoderConfig passwordEncoder = new PasswordEncoderConfig();
@@ -41,43 +43,63 @@ public class NotProd {
                     .build();
 
             memberList.addAll(List.of(user1, user2));
-            memberRepository.saveAll(memberList);
+            userRepository.saveAll(memberList);
 
             // 유저의 지출 등록
             List<Expenditure> expendityreList = new ArrayList<>();
 
-            for (int i = 10; i <= 20; i++) {
 
-                Expenditure 식비 = Expenditure.builder()
-                        .userId(user1.getId())
-                        .amount(i * 1000)
-                        .category(Category.음식)
-                        .memo("카페")
-                        .date(LocalDate.of(2023, 11, i))
-                        .build();
+            for (int i = 10; i <= 11; i++) { // 월
+                for (int j = 1; j <= 30; j++) { // 일
+                    for (int k = 1; k <= 2; k++) { // user
+                        String username = "user" + k;
 
-                Expenditure 출근 = Expenditure.builder()
-                        .userId(user1.getId())
-                        .amount(1800)
-                        .category(Category.교통)
-                        .memo("버스비")
-                        .date(LocalDate.of(2023, 11, i))
-                        .build();
+                        User user = userRepository.findByUsername(username).get();
 
-                Expenditure 퇴근 = Expenditure.builder()
-                        .userId(user1.getId())
-                        .amount(1800)
-                        .category(Category.교통)
-                        .memo("버스비")
-                        .date(LocalDate.of(2023, 11, i))
-                        .build();
+                        if (i == 11 && user.getUsername().equals("user2")) { //user2의 10월 대비 11월 지출을 늘리기 위함.
+                            Expenditure 저녁 = Expenditure.builder()
+                                    .userId(user.getId())
+                                    .amount(10000)
+                                    .category(Category.음식)
+                                    .memo("저녁")
+                                    .date(LocalDate.of(2023, 11, j))
+                                    .build();
 
-                expendityreList.add(식비);
-                // 왕복 교통비
-                expendityreList.add(출근);
-                expendityreList.add(퇴근);
+                            expendityreList.add(저녁);
+                        }
 
+                        Expenditure 식비 = Expenditure.builder()
+                                .userId(user.getId())
+                                .amount(j * 1000)
+                                .category(Category.음식)
+                                .memo("카페")
+                                .date(LocalDate.of(2023, i, j))
+                                .build();
+
+                        Expenditure 출근 = Expenditure.builder()
+                                .userId(user.getId())
+                                .amount(1800)
+                                .category(Category.교통)
+                                .memo("버스비")
+                                .date(LocalDate.of(2023, i, j))
+                                .build();
+
+                        Expenditure 퇴근 = Expenditure.builder()
+                                .userId(user.getId())
+                                .amount(1800)
+                                .category(Category.교통)
+                                .memo("버스비")
+                                .date(LocalDate.of(2023, i, j))
+                                .build();
+
+                        expendityreList.add(식비);
+                        // 왕복 교통비
+                        expendityreList.add(출근);
+                        expendityreList.add(퇴근);
+                    }
+                }
             }
+
 
             Expenditure 식비 = Expenditure.builder()
                     .userId(user1.getId())
