@@ -11,5 +11,5 @@ public interface ExpenditureRepository extends JpaRepository<Expenditure, Long>,
 
     Optional<List<Expenditure>> findAllByUserId(Integer id);
 
-    Optional<List<Expenditure>> findAllByUserIdAndDate(Integer id, LocalDate now);
+    Optional<List<Expenditure>> findAllByUserIdAndDateBetween(Integer id, LocalDate start, LocalDate end);
 }

@@ -82,6 +82,7 @@ public class ExpenditureRepositoryImpl extends Querydsl4RepositorySupport implem
                 .groupBy(expenditure.category)
                 .fetch();
     }
+
     /**
      * 요일에 따른 지출 합계
      *
@@ -96,6 +97,15 @@ public class ExpenditureRepositoryImpl extends Querydsl4RepositorySupport implem
                 .from(expenditure)
                 .where(searchDate(startDate, endDate))
                 .fetchOne();
+    }
+
+    @Override
+    public Integer totalAmountByDateAndUserId(List<Expenditure> expenditureList, Integer userId) {
+        return expenditureList.stream()
+                .filter(expenditure -> expenditure.getUserId().equals(userId)) // userId 일치 필터링
+                .map(Expenditure::getAmount)
+                .mapToInt(Integer::intValue)
+                .sum();
     }
 
     /**

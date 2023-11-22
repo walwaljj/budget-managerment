@@ -160,7 +160,7 @@ public class ExpenditureService {
 
         User user = findUserByUsername(username);
 
-        List<Expenditure> todayExpenditureList = getTodayExpenditureList(user, date);
+        List<Expenditure> todayExpenditureList = getExpenditureListByDate(user, date, date);
 
         Integer totalAmount = expenditureRepository.totalAmountByDate(date, date);
 
@@ -177,12 +177,13 @@ public class ExpenditureService {
      * date 별 지출 조회
      *
      * @param user
-     * @param date
+     * @param start
+     * @param end
      * @return List<Expenditure>
      */
-    private List<Expenditure> getTodayExpenditureList(User user, LocalDate date) {
+    private List<Expenditure> getExpenditureListByDate(User user, LocalDate start, LocalDate end) {
 
-        Optional<List<Expenditure>> todayExpenditureList = expenditureRepository.findAllByUserIdAndDate(user.getId(), date);
+        Optional<List<Expenditure>> todayExpenditureList = expenditureRepository.findAllByUserIdAndDateBetween(user.getId(), start, end);
 
         // 만약 userId 로 찾은 지출 목록의 결과가 비어있다면 notfound 반환
         if (todayExpenditureList.isEmpty()) {
@@ -257,52 +258,51 @@ public class ExpenditureService {
 
         ExpenditureStatisticsResponseDto expenditureStatisticsResponseDto = new ExpenditureStatisticsResponseDto();
 
-        // 지난 달 1일 ~ n 일 까지 소비 총액 == 100%
+        User user = findUserByUsername(username);
+
+        // 지난달
         LocalDate lastMonth = date.minusMonths(1);
 
-        Integer lastMonthTotalAmountByDate = expenditureRepository.totalAmountByDate(lastMonth.withDayOfMonth(1), lastMonth);
+        // 유저의 지난달 소비 목록
+        List<Expenditure> lastMonthExpenditureListByDate = getExpenditureListByDate(user, lastMonth.withDayOfMonth(1), lastMonth);
+
+        // 지난 달 1일 ~ n 일 까지 소비 총액 == 100%
+        Integer lastMonthTotalAmountByDate = expenditureRepository.totalAmountByDateAndUserId(lastMonthExpenditureListByDate, user.getId());
 
         // 지난 달 1일 ~ n 일 까지 카테고리 별 소비 총액
-        List<TotalAmountResponseDto> lastMonthTotalAmountList = expenditureRepository.totalAmountListByCategory(lastMonth);
+        List<TotalAmountResponseDto> lastMonthTotalAmountList = expenditureRepository.totalAmountListByCategory(lastMonthExpenditureListByDate);
+
+        // 유저의 이번달 소비 목록
+        List<Expenditure> thisMonthExpenditureListByDate = getExpenditureListByDate(user, date.withDayOfMonth(1), date);
 
         // 이번달 1일 ~ n 일 까지 소비 총액
-        Integer totalAmountByDate = expenditureRepository.totalAmountByDate(date.withDayOfMonth(1), date);
+        Integer totalAmountByDate = expenditureRepository.totalAmountByDateAndUserId(thisMonthExpenditureListByDate, user.getId());
 
         // 이번달 1일 ~ n 일 까지 카테고리 별 소비 총액
-        List<TotalAmountResponseDto> totalAmountList = expenditureRepository.totalAmountListByCategory(date);
-
+        List<TotalAmountResponseDto> totalAmountList = expenditureRepository.totalAmountListByCategory(thisMonthExpenditureListByDate);
 
         // 소비율 : 이번달 총액 ( 지난달 총액 / 100 )
         int rate = totalAmountByDate / (lastMonthTotalAmountByDate / 100);
 
-
         // 카테고리 별 소비율
         List<TotalAmountResponseDto> resultRateList = new ArrayList<>();
 
-        for (int i = 0; i < 2; i++) {
+        for (Category category : Category.values()) {
+            TotalAmountResponseDto lastMonthTotalAmountResponseDto = findTotalAmountDtoByCategory(lastMonthTotalAmountList, category);
+            TotalAmountResponseDto totalAmountResponseDto = findTotalAmountDtoByCategory(totalAmountList, category);
 
-            for (Category category : Category.values()) {
-
-                TotalAmountResponseDto lastMonthTotalAmountResponseDto = lastMonthTotalAmountList.get(i);
-                Integer lastMonthTotalAmount = lastMonthTotalAmountResponseDto.getAmount();
-
-                TotalAmountResponseDto totalAmountResponseDto = totalAmountList.get(i);
-                Integer thisMonthTotalAmount = totalAmountResponseDto.getAmount();
-
-                // 지난달 또는 이번달에 소비된 금액이 없다면 계산을 생략함.
-                if (lastMonthTotalAmount == null) {
-                    continue;
-                } else if (thisMonthTotalAmount == null) {
-                    continue;
-                }
-
-                TotalAmountResponseDto resultDto = TotalAmountResponseDto.builder()
-                        .category(category)
-                        .amount(thisMonthTotalAmount / (lastMonthTotalAmount / 100))
-                        .build();
-
-                resultRateList.add(resultDto);
+            // 지난달 또는 이번달에 소비된 금액이 없다면 계산을 생략함.
+            if (lastMonthTotalAmountResponseDto == null || totalAmountResponseDto == null) {
+                continue;
             }
+
+            TotalAmountResponseDto resultDto = new TotalAmountResponseDto();
+            resultDto.setCategory(category);
+
+            // 소비율 계산
+            resultDto.setAmount((int) (double) totalAmountResponseDto.getAmount() / (lastMonthTotalAmountResponseDto.getAmount() / 100));
+
+            resultRateList.add(resultDto);
         }
 
         return expenditureStatisticsResponseDto.builder()
@@ -315,6 +315,14 @@ public class ExpenditureService {
                 .rate(rate)
                 .totalAmountByCategory(resultRateList)
                 .build();
+    }
+
+    // 해당 카테고리에 대한 TotalAmountResponseDto 찾기
+    private TotalAmountResponseDto findTotalAmountDtoByCategory(List<TotalAmountResponseDto> totalAmountList, Category category) {
+        return totalAmountList.stream()
+                .filter(dto -> dto.getCategory() == category)
+                .findFirst()
+                .orElse(null);
     }
 
 }

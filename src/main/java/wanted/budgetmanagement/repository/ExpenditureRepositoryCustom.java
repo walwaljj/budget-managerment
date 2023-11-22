@@ -21,4 +21,6 @@ public interface ExpenditureRepositoryCustom {
     List<TotalAmountResponseDto> totalAmountListByCategory(LocalDate date);
 
     Integer totalAmountByDate(LocalDate startDate, LocalDate endDate);
+
+    Integer totalAmountByDateAndUserId(List<Expenditure> expenditureList, Integer userId);
 }
