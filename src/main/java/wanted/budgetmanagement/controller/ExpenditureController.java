@@ -147,7 +147,7 @@ public class ExpenditureController {
             throw new CustomException(ErrorCode.INVALID_RANGE);
         }
 
-        ResponseCode responseCode = ResponseCode.Expenditure_UPDATE;
+        ResponseCode responseCode = ResponseCode.Expenditure_SEARCH;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -158,8 +158,6 @@ public class ExpenditureController {
     }
 
     @GetMapping("/statistics/month")
-        // 오늘이 월요일이면 지난 주 월요일에 대한 소비율
-        // 오늘 기준 다른 유저와의 소비율
     @Operation(summary = "지출 통계", description = "지난달 대비 지출 통계를 조회합니다. 예 ) 오늘이 10일 이라면 지난달 1일~ 10일 까지 ")
     public ResponseEntity<CommonResponse> expenditureStatisticsByLastMonth(
             Authentication auth,
@@ -169,7 +167,7 @@ public class ExpenditureController {
         if (date.equals("today")) {
             date = LocalDate.now().toString();
         }
-        ResponseCode responseCode = ResponseCode.Expenditure_UPDATE;
+        ResponseCode responseCode = ResponseCode.Expenditure_RATE;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
