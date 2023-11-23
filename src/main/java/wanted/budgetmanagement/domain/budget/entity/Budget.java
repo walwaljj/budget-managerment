@@ -1,13 +1,12 @@
-package wanted.budgetmanagement.domain;
+package wanted.budgetmanagement.domain.budget.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import wanted.budgetmanagement.domain.Category;
+
 
 /**
  * 예산. 지출 계획
@@ -20,10 +19,14 @@ import lombok.NoArgsConstructor;
 public class Budget {
 
     @Id
-    private Long userId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Integer userId;
 
     @Enumerated(EnumType.STRING)
     private Category category; // 카테고리
 
     private Integer budget; // 예산
+
 }

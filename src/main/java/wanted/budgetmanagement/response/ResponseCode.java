@@ -21,7 +21,9 @@ public enum ResponseCode {
     // USER
     USER_CREATE(HttpStatus.CREATED, "201", "회원 가입 성공"),
     USER_LOGIN(HttpStatus.OK, "200", "로그인 성공"),
-    USER_LOGOUT(HttpStatus.NO_CONTENT, "204", "로그 아웃 성공");
+    USER_LOGOUT(HttpStatus.NO_CONTENT, "204", "로그 아웃 성공"),
+
+    BUDGET_SETTING(HttpStatus.CREATED, "201" ,"예산 설정 성공" );
 
 
 
