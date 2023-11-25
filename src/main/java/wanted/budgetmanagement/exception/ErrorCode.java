@@ -17,7 +17,10 @@ public enum ErrorCode {
     EXPENDITURE_DELETION_FAILED(HttpStatus.NOT_FOUND, " 지출 내역 삭제 실패."),
 
     // SEARCH
-    INVALID_RANGE(HttpStatus.BAD_REQUEST, "금액 범위를 확인해주세요.");
+    INVALID_RANGE(HttpStatus.BAD_REQUEST, "금액 범위를 확인해주세요."),
+
+    // BUDGET
+    BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND, "예산을 찾을 수 없습니다.");
 
 
     private HttpStatus status;

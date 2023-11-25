@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import wanted.budgetmanagement.domain.Category;
 
+import java.time.Month;
+
 
 /**
  * 예산. 지출 계획
@@ -28,5 +30,7 @@ public class Budget {
     private Category category; // 카테고리
 
     private Integer budget; // 예산
+
+    private Month month; // 예산이 적용될 월
 
 }

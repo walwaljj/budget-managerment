@@ -20,7 +20,10 @@ public class BudgetController {
     private final BudgetService budgetService;
 
     @PostMapping("")
-    public ResponseEntity<CommonResponse> budgetSetting(Authentication auth, @RequestParam BudgetRequestDto budgetRequestDto){
+    public ResponseEntity<CommonResponse> budgetSetting(
+            Authentication auth,
+            @RequestParam BudgetRequestDto budgetRequestDto,
+            @RequestParam Integer totalBudget) {
 
         ResponseCode responseCode = ResponseCode.BUDGET_SETTING;
 
@@ -28,7 +31,7 @@ public class BudgetController {
                 .responseCode(responseCode)
                 .code(responseCode.getCode())
                 .message(responseCode.getMessage())
-                .data(budgetService.budgetSetting(auth.getName(), budgetRequestDto))
+                .data(budgetService.budgetSetting(auth.getName(), budgetRequestDto, totalBudget))
                 .build());
     }
 

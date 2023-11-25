@@ -12,6 +12,8 @@ import wanted.budgetmanagement.exception.ErrorCode;
 import wanted.budgetmanagement.repository.BudgetRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 
+import java.time.Month;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -23,7 +25,7 @@ public class BudgetService {
     /**
      * 예산 설정하기
      */
-    public BudgetResponseDto budgetSetting(String username ,BudgetRequestDto requestDto){
+    public BudgetResponseDto budgetSetting(String username ,BudgetRequestDto requestDto, Integer totalBudget){
 
         User user = findUserByUsername(username);
 
@@ -31,6 +33,7 @@ public class BudgetService {
                 .userId(user.getId())
                 .category(requestDto.getCategory())
                 .budget(requestDto.getBudget())
+                .month(requestDto.getMonth())
                 .build();
 
         return BudgetResponseDto.toBudgetResponseDto(budgetRepository.save(budget));
@@ -48,7 +51,7 @@ public class BudgetService {
     }
 
     /**
-     * 로그인한 유저의 지출 내역에 대한 권한 확인, 맞다면 Budget 반환
+     * 예산에 대한 권한 확인, 맞다면 Budget 반환
      */
     public Budget checkPermissions(String username, Long budgetId) {
 
@@ -70,7 +73,18 @@ public class BudgetService {
      */
     private Budget findBudgetById(Long budgetId) {
         Budget budget = budgetRepository.findById(budgetId).orElseThrow(
-                () -> new CustomException(ErrorCode.EXPENDITURE_NOT_FOUND));
+                () -> new CustomException(ErrorCode.BUDGET_NOT_FOUND));
         return budget;
+    }
+
+
+    /**
+     * user 와 기간으로 budget 찾기
+     * @param user
+     * @param month
+     * @return
+     */
+    private Budget findBudgetByUserAndMonth(User user, Month month) {
+        return budgetRepository.findByUserIdAndMonth(user.getId(), month).orElseThrow(() -> new CustomException(ErrorCode.BUDGET_NOT_FOUND));
     }
 }
