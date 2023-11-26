@@ -20,7 +20,8 @@ public enum ErrorCode {
     INVALID_RANGE(HttpStatus.BAD_REQUEST, "금액 범위를 확인해주세요."),
 
     // BUDGET
-    BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND, "예산을 찾을 수 없습니다.");
+    BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND, "예산을 찾을 수 없습니다."),
+    BUDGET_EXISTS(HttpStatus.CONFLICT,"이미 설정한 예산이 있습니다." );
 
 
     private HttpStatus status;

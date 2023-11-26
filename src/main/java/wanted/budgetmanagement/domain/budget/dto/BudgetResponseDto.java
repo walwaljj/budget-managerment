@@ -16,8 +16,6 @@ public class BudgetResponseDto {
     @Enumerated(EnumType.STRING)
     private Category category; // 카테고리
 
-    private Integer totalBudget; // 예산
-
     private Integer budget; // 예산
 
     private Month month;

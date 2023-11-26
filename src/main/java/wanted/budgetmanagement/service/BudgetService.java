@@ -3,16 +3,23 @@ package wanted.budgetmanagement.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import wanted.budgetmanagement.domain.Category;
+import wanted.budgetmanagement.domain.budget.dto.BudgetRecommendationRequestDto;
 import wanted.budgetmanagement.domain.budget.dto.BudgetRequestDto;
 import wanted.budgetmanagement.domain.budget.dto.BudgetResponseDto;
 import wanted.budgetmanagement.domain.budget.entity.Budget;
+import wanted.budgetmanagement.domain.expenditure.dto.TotalAmountResponseDto;
+import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.exception.CustomException;
 import wanted.budgetmanagement.exception.ErrorCode;
 import wanted.budgetmanagement.repository.BudgetRepository;
+import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 
 import java.time.Month;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,11 +28,12 @@ public class BudgetService {
 
     private final BudgetRepository budgetRepository;
     private final UserRepository userRepository;
+    private final ExpenditureRepository expenditureRepository;
 
     /**
      * 예산 설정하기
      */
-    public BudgetResponseDto budgetSetting(String username ,BudgetRequestDto requestDto, Integer totalBudget){
+    public BudgetResponseDto budgetSetting(String username ,BudgetRequestDto requestDto){
 
         User user = findUserByUsername(username);
 
@@ -37,6 +45,59 @@ public class BudgetService {
                 .build();
 
         return BudgetResponseDto.toBudgetResponseDto(budgetRepository.save(budget));
+    }
+
+    /**
+     * 예산 추천받기
+     */
+    public List<TotalAmountResponseDto> budgetRecommendation(String username , BudgetRecommendationRequestDto requestDto){
+
+        User user = findUserByUsername(username);
+
+        // 설정한 예산이 있는지 확인, 있다면 BUDGET_EXISTS
+        if(budgetRepository.findByUserIdAndMonth(user.getId(),requestDto.getMonth()).isPresent()){
+            throw new CustomException(ErrorCode.BUDGET_EXISTS);
+        }
+
+        // 총 예산
+        Integer totalBudget = requestDto.getTotalBudget();
+
+        //1. repo 에 저장된 금액을 모두 더하고
+        List<Expenditure> allExpenditureList = expenditureRepository.findAll();
+
+        int totalAmount = allExpenditureList.stream()
+                .mapToInt(Expenditure::getAmount)
+                .sum();
+
+        //2. 총 금액에서 카테고리 별 비율을 나눠줌
+        List<TotalAmountResponseDto> totalAmountResponseDtoList = expenditureRepository.totalAmountListByCategory(allExpenditureList);
+
+        // 비율을 나눠 저장할 list
+        List<TotalAmountResponseDto> recommendationAmountList = new ArrayList<>();
+
+        for (TotalAmountResponseDto totalAmountResponseDto : totalAmountResponseDtoList) {
+
+            // 비율을 구함
+            int rate = (int) ((double)totalAmountResponseDto.getAmount() / totalAmount * 100);
+
+            //3. 사용자가 입력한 총 예산에서 비율 대로 금액을 카테고리 별로 나눠 주기
+            int recommendationAmount = totalBudget * rate / 100;
+
+            recommendationAmountList.add(TotalAmountResponseDto.builder()
+                    .category(totalAmountResponseDto.getCategory())
+                    .amount(recommendationAmount)
+                    .build());
+
+            // 저장
+            budgetRepository.save(Budget.builder()
+                    .userId(user.getId())
+                    .category(totalAmountResponseDto.getCategory())
+                    .month(requestDto.getMonth())
+                    .budget(recommendationAmount)
+                    .build());
+        }
+
+        return recommendationAmountList;
     }
 
     /**
@@ -85,6 +146,7 @@ public class BudgetService {
      * @return
      */
     private Budget findBudgetByUserAndMonth(User user, Month month) {
-        return budgetRepository.findByUserIdAndMonth(user.getId(), month).orElseThrow(() -> new CustomException(ErrorCode.BUDGET_NOT_FOUND));
+        return budgetRepository.findByUserIdAndMonth(user.getId(), month).orElseThrow(
+                () -> new CustomException(ErrorCode.BUDGET_NOT_FOUND));
     }
 }
