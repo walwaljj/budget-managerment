@@ -3,7 +3,6 @@ package wanted.budgetmanagement.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import wanted.budgetmanagement.domain.Category;
 import wanted.budgetmanagement.domain.budget.dto.BudgetRecommendationRequestDto;
 import wanted.budgetmanagement.domain.budget.dto.BudgetRequestDto;
 import wanted.budgetmanagement.domain.budget.dto.BudgetResponseDto;
@@ -20,6 +19,7 @@ import wanted.budgetmanagement.repository.UserRepository;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +33,7 @@ public class BudgetService {
     /**
      * 예산 설정하기
      */
-    public BudgetResponseDto budgetSetting(String username ,BudgetRequestDto requestDto){
+    public BudgetResponseDto budgetSetting(String username, BudgetRequestDto requestDto) {
 
         User user = findUserByUsername(username);
 
@@ -50,12 +50,14 @@ public class BudgetService {
     /**
      * 예산 추천받기
      */
-    public List<TotalAmountResponseDto> budgetRecommendation(String username , BudgetRecommendationRequestDto requestDto){
+    public List<TotalAmountResponseDto> budgetRecommendation(String username, BudgetRecommendationRequestDto requestDto) {
 
         User user = findUserByUsername(username);
 
         // 설정한 예산이 있는지 확인, 있다면 BUDGET_EXISTS
-        if(budgetRepository.findByUserIdAndMonth(user.getId(),requestDto.getMonth()).isPresent()){
+        Optional<List<Budget>> optionalBudgetList = budgetRepository.findByUserIdAndMonth(user.getId(), requestDto.getMonth());
+
+        if (!optionalBudgetList.get().isEmpty()) {
             throw new CustomException(ErrorCode.BUDGET_EXISTS);
         }
 
@@ -78,7 +80,7 @@ public class BudgetService {
         for (TotalAmountResponseDto totalAmountResponseDto : totalAmountResponseDtoList) {
 
             // 비율을 구함
-            int rate = (int) ((double)totalAmountResponseDto.getAmount() / totalAmount * 100);
+            int rate = (int) ((double) totalAmountResponseDto.getAmount() / totalAmount * 100);
 
             //3. 사용자가 입력한 총 예산에서 비율 대로 금액을 카테고리 별로 나눠 주기
             int recommendationAmount = totalBudget * rate / 100;
@@ -129,6 +131,7 @@ public class BudgetService {
 
     /**
      * budgetId 로 예산 찾기
+     *
      * @param budgetId
      * @return Expenditure
      */
@@ -141,11 +144,12 @@ public class BudgetService {
 
     /**
      * user 와 기간으로 budget 찾기
+     *
      * @param user
      * @param month
      * @return
      */
-    private Budget findBudgetByUserAndMonth(User user, Month month) {
+    public List<Budget> findBudgetByUserAndMonth(User user, Month month) {
         return budgetRepository.findByUserIdAndMonth(user.getId(), month).orElseThrow(
                 () -> new CustomException(ErrorCode.BUDGET_NOT_FOUND));
     }
