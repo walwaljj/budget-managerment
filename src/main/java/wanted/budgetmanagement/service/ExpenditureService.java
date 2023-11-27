@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wanted.budgetmanagement.domain.Category;
+import wanted.budgetmanagement.domain.budget.entity.Budget;
 import wanted.budgetmanagement.domain.expenditure.dto.*;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.exception.CustomException;
 import wanted.budgetmanagement.exception.ErrorCode;
+import wanted.budgetmanagement.repository.BudgetRepository;
 import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 
@@ -23,6 +25,8 @@ import java.util.Optional;
 public class ExpenditureService {
     private final ExpenditureRepository expenditureRepository;
     private final UserRepository userRepository;
+    private final BudgetRepository budgetRepository;
+    private final BudgetService budgetService;
 
     /**
      * 지출 생성
@@ -323,6 +327,63 @@ public class ExpenditureService {
                 .filter(dto -> dto.getCategory() == category)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * 오늘 지출 추천받기
+     *
+     * @param username
+     * @param date
+     * @return
+     */
+    public ExpenditureRecommendationResponseDTO expenditureRecommendation(String username, LocalDate date) {
+
+        User user = findUserByUsername(username);
+
+        Optional<List<Budget>> optionalBudget = budgetRepository.findByUserIdAndMonth(user.getId(), date.getMonth());
+
+        String message = "";
+
+        // 만약 예산 설정이 되어있지 않다면 ? not found
+        if (optionalBudget.isEmpty())
+            throw new CustomException(ErrorCode.BUDGET_NOT_FOUND);
+
+        List<Budget> budgetList = optionalBudget.get();
+
+        Integer totalBudget = 0;
+
+        for (Budget budget : budgetList) {
+            totalBudget += budget.getBudget();
+        }
+
+
+        // 예산이 설정 되어 있다면
+        // 입력받은 날짜 기준으로 1일~ 금일까지 지출 금액 합계 가져오기
+        List<Expenditure> thisMonthExpenditureListByDate = getExpenditureListByDate(user, date.withDayOfMonth(1), date);
+        Integer totalAmountByDate = expenditureRepository.totalAmountByDateAndUserId(thisMonthExpenditureListByDate, user.getId());
+
+        // (한달 총 예산 - 지출 금액 합계) 구하기
+        int remainingBudget = totalBudget - totalAmountByDate;
+
+        // 마지막 일 까지 몇일 남았는지 계산 후 남은 예산에서 나누기.
+        int remainingDays = date.lengthOfMonth() - date.getDayOfWeek().getValue();
+
+        // ++ 예산이 너무 타이트하거나 예산을 초과했어도 0원 은 반환 금지 (유저가 설정한 예산 총 합계에서 해당 월의 일수를 나눠 반환)
+        if (remainingBudget <= 0) {
+            int amountPerDay = totalBudget / date.lengthOfMonth(); // 하루 사용 가능 금액
+            remainingBudget = amountPerDay * remainingDays; // 새롭게 남은 예산을 세팅함.
+            message = "잘 할 수 있어요! 조금 더 아껴 보아요";
+        }
+
+        int result = ((remainingBudget / remainingDays) / 100) * 100;
+
+        if (!message.equals("")) message = "절약을 잘 실천하고 계세요! 오늘도 절약 도전!";
+
+        return ExpenditureRecommendationResponseDTO.builder()
+                .todayBudget(result)
+                .date(date)
+                .message(message)
+                .build();
     }
 
 }

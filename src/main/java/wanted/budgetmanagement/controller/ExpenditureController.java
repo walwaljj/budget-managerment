@@ -31,7 +31,7 @@ public class ExpenditureController {
             Authentication auth
     ) {
 
-        ResponseCode responseCode = ResponseCode.Expenditure_CREATE;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_CREATE;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -48,7 +48,7 @@ public class ExpenditureController {
             Authentication auth
     ) {
 
-        ResponseCode responseCode = ResponseCode.Expenditure_DELETE;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_DELETE;
 
         expenditureService.delete(auth.getName(), expenditureId);
 
@@ -67,7 +67,7 @@ public class ExpenditureController {
             Authentication auth
     ) {
 
-        ResponseCode responseCode = ResponseCode.Expenditure_UPDATE;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_UPDATE;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -84,7 +84,7 @@ public class ExpenditureController {
             Authentication auth
     ) {
 
-        ResponseCode responseCode = ResponseCode.Expenditure_READ;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_READ;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -100,7 +100,7 @@ public class ExpenditureController {
             Authentication auth
     ) {
 
-        ResponseCode responseCode = ResponseCode.Expenditure_READ;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_READ;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -121,7 +121,7 @@ public class ExpenditureController {
             date = LocalDate.now().toString();
         }
 
-        ResponseCode responseCode = ResponseCode.Expenditure_READ;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_READ;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -147,7 +147,7 @@ public class ExpenditureController {
             throw new CustomException(ErrorCode.INVALID_RANGE);
         }
 
-        ResponseCode responseCode = ResponseCode.Expenditure_SEARCH;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_SEARCH;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -167,7 +167,7 @@ public class ExpenditureController {
         if (date.equals("today")) {
             date = LocalDate.now().toString();
         }
-        ResponseCode responseCode = ResponseCode.Expenditure_RATE;
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_RATE;
 
         return ResponseEntity.ok(CommonResponse.builder()
                 .responseCode(responseCode)
@@ -176,5 +176,26 @@ public class ExpenditureController {
                 .message(responseCode.getMessage())
                 .build());
     }
+
+    @GetMapping("/recommend-today")
+    @Operation(summary = "금일 지출 추천", description = "금일 사용할 예산을 추천 합니다. ")
+    public ResponseEntity<CommonResponse> expenditureRecommendation(
+            Authentication auth,
+            @RequestParam(value = "date", defaultValue = "today") String date
+    ) {
+
+        if (date.equals("today")) {
+            date = LocalDate.now().toString();
+        }
+        ResponseCode responseCode = ResponseCode.EXPENDITURE_RECOMMEND;
+
+        return ResponseEntity.ok(CommonResponse.builder()
+                .responseCode(responseCode)
+                .code(responseCode.getCode())
+                .data(expenditureService.expenditureRecommendation(auth.getName(), LocalDate.parse(date)))
+                .message(responseCode.getMessage())
+                .build());
+    }
+
 
 }

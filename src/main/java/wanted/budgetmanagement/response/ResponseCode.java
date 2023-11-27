@@ -9,21 +9,22 @@ import org.springframework.http.ResponseEntity;
 @ToString
 public enum ResponseCode {
 
-    // Expenditure
-    Expenditure_CREATE(HttpStatus.CREATED, "201", "지출 등록 성공"),
-    Expenditure_UPDATE(HttpStatus.CREATED, "201", "지출 수정 성공"),
-    Expenditure_DELETE(HttpStatus.NO_CONTENT, "201", "지출 삭제 성공"),
-    Expenditure_READ(HttpStatus.OK, "200", "지출 상세 조회 성공"),
-    Expenditure_LIST_READ(HttpStatus.OK, "200", "지출 전체 조회 성공"),
-    Expenditure_RATE(HttpStatus.OK, "200", "소비율 조회 성공"),
-    Expenditure_SEARCH(HttpStatus.OK, "200", "지출 검색 성공"),
+    // EXPENDITURE
+    EXPENDITURE_CREATE(HttpStatus.CREATED, "201", "지출 등록 성공"),
+    EXPENDITURE_UPDATE(HttpStatus.CREATED, "201", "지출 수정 성공"),
+    EXPENDITURE_DELETE(HttpStatus.NO_CONTENT, "201", "지출 삭제 성공"),
+    EXPENDITURE_READ(HttpStatus.OK, "200", "지출 상세 조회 성공"),
+    EXPENDITURE_LIST_READ(HttpStatus.OK, "200", "지출 전체 조회 성공"),
+    EXPENDITURE_RATE(HttpStatus.OK, "200", "소비율 조회 성공"),
+    EXPENDITURE_SEARCH(HttpStatus.OK, "200", "지출 검색 성공"),
+    EXPENDITURE_RECOMMEND(HttpStatus.OK, "200", "금일 지출 추천 성공"),
 
     // USER
     USER_CREATE(HttpStatus.CREATED, "201", "회원 가입 성공"),
     USER_LOGIN(HttpStatus.OK, "200", "로그인 성공"),
     USER_LOGOUT(HttpStatus.NO_CONTENT, "204", "로그 아웃 성공"),
 
-    // BUDGET
+    // BUDGET,
     BUDGET_SETTING(HttpStatus.CREATED, "201", "예산 설정 성공"),
     BUDGET_RECOMMENDATION(HttpStatus.CREATED, "201", "예산 추천 성공");
 
