@@ -1,6 +1,5 @@
 package wanted.budgetmanagement.config.security;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,8 +8,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Component;
-import wanted.budgetmanagement.config.security.jwt.JwtUtils;
 import wanted.budgetmanagement.config.security.jwt.JwtFilter;
+import wanted.budgetmanagement.config.security.jwt.JwtUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +25,8 @@ public class WebFilterChainConfig {
                                 "/v1/users/sign",
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
-                                "/v3/api-docs/**")
+                                "/v3/api-docs/**",
+                                "/v1/notification")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
