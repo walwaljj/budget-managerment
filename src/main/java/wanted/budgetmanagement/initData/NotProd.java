@@ -49,7 +49,7 @@ public class NotProd {
             List<Expenditure> expendityreList = new ArrayList<>();
 
 
-            for (int i = 10; i <= 11; i++) { // 월
+            for (int i = 10; i <= 12; i++) { // 월
                 for (int j = 1; j <= 30; j++) { // 일
                     for (int k = 1; k <= 2; k++) { // user
                         String username = "user" + k;
