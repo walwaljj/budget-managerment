@@ -340,50 +340,69 @@ public class ExpenditureService {
 
         User user = findUserByUsername(username);
 
-        Optional<List<Budget>> optionalBudget = budgetRepository.findByUserIdAndMonth(user.getId(), date.getMonth());
+        Optional<List<Budget>> optionalBudgetList = budgetRepository.findByUserIdAndMonth(user.getId(), date.getMonth());
 
-        String message = "";
+        // 반환할 추천 지출
+        int result = 0;
 
         // 만약 예산 설정이 되어있지 않다면 ? not found
-        if (optionalBudget.isEmpty())
+        if (optionalBudgetList.get().isEmpty()) {
             throw new CustomException(ErrorCode.BUDGET_NOT_FOUND);
+        }
+        else {
 
-        List<Budget> budgetList = optionalBudget.get();
+            // 응원 메시지!@
+            String message = "";
 
-        Integer totalBudget = 0;
+            List<Budget> budgetList = optionalBudgetList.get();
 
-        for (Budget budget : budgetList) {
-            totalBudget += budget.getBudget();
+            // 한달 총 예산
+            Integer totalBudget = 0;
+
+            for (Budget budget : budgetList) {
+                totalBudget += budget.getBudget();
+            }
+
+
+            // 예산이 설정 되어 있다면
+            // 입력받은 날짜 기준으로 1일~ 금일까지 지출 금액 합계 가져오기
+            List<Expenditure> thisMonthExpenditureListByDate = getExpenditureListByDate(user, date.withDayOfMonth(1), date);
+            Integer totalAmountByDate = expenditureRepository.totalAmountByDateAndUserId(thisMonthExpenditureListByDate, user.getId());
+
+            // (한달 총 예산 - 지출 금액 합계) 구하기
+            int remainingBudget = totalBudget - totalAmountByDate;
+
+            // 마지막 일 까지 몇일 남았는지 계산 후 남은 예산에서 나누기.
+            int remainingDays = date.lengthOfMonth() - date.getDayOfWeek().getValue();
+
+            // 예산을 초과했어도 0원 은 반환 금지 (유저가 설정한 예산 총 합계에서 해당 월의 일수를 나눠 반환)
+            if (remainingBudget <= 0) {
+                message = "소비가 늘었네요.. 하지만 잘 하고 있으니 조금 줄여 볼까요?";
+            }
+            // 예산이 너무 타이트한 경우 나타낼 메시지
+            else if (remainingBudget / remainingDays <= totalBudget / date.lengthOfMonth()) {
+                message = "잘 할 수 있어요! 조금 더 아껴 보아요";
+            }
+
+            // 예산이 타이트 하거나 초과하지 않았을 때의 메시지
+            if (message.equals("") || message.length() == 0) message = "절약을 잘 실천하고 계세요! 오늘도 절약 도전!";
+
+            // 예산을 초과했어도 0원 은 반환 금지 (유저가 설정한 예산 총 합계에서 해당 월의 일수를 나눠 반환)
+            if (remainingBudget <= 0) {
+                int amountPerDay = totalBudget / date.lengthOfMonth(); // 하루 사용 가능 금액
+                remainingBudget = amountPerDay * remainingDays; // 새롭게 남은 예산을 세팅함.
+            }
+
+            // 반환할 추천 지출
+            result = ((remainingBudget / remainingDays) / 100) * 100;
+
+            return ExpenditureRecommendationResponseDTO.builder()
+                    .todayBudget(result)
+                    .date(date)
+                    .message(message)
+                    .build();
         }
 
-
-        // 예산이 설정 되어 있다면
-        // 입력받은 날짜 기준으로 1일~ 금일까지 지출 금액 합계 가져오기
-        List<Expenditure> thisMonthExpenditureListByDate = getExpenditureListByDate(user, date.withDayOfMonth(1), date);
-        Integer totalAmountByDate = expenditureRepository.totalAmountByDateAndUserId(thisMonthExpenditureListByDate, user.getId());
-
-        // (한달 총 예산 - 지출 금액 합계) 구하기
-        int remainingBudget = totalBudget - totalAmountByDate;
-
-        // 마지막 일 까지 몇일 남았는지 계산 후 남은 예산에서 나누기.
-        int remainingDays = date.lengthOfMonth() - date.getDayOfWeek().getValue();
-
-        // ++ 예산이 너무 타이트하거나 예산을 초과했어도 0원 은 반환 금지 (유저가 설정한 예산 총 합계에서 해당 월의 일수를 나눠 반환)
-        if (remainingBudget <= 0) {
-            int amountPerDay = totalBudget / date.lengthOfMonth(); // 하루 사용 가능 금액
-            remainingBudget = amountPerDay * remainingDays; // 새롭게 남은 예산을 세팅함.
-            message = "잘 할 수 있어요! 조금 더 아껴 보아요";
-        }
-
-        int result = ((remainingBudget / remainingDays) / 100) * 100;
-
-        if (!message.equals("")) message = "절약을 잘 실천하고 계세요! 오늘도 절약 도전!";
-
-        return ExpenditureRecommendationResponseDTO.builder()
-                .todayBudget(result)
-                .date(date)
-                .message(message)
-                .build();
     }
 
 }
