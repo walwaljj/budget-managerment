@@ -10,11 +10,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import wanted.budgetmanagement.domain.expenditure.dto.ExpenditureRecommendationResponseDTO;
+import wanted.budgetmanagement.domain.user.entity.User;
+import wanted.budgetmanagement.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -23,19 +27,25 @@ import java.time.LocalDate;
 public class WebHookService {
 
     private final ExpenditureService expenditureService;
+    private final UserRepository userRepository;
 
     @Value("${discord.webhookURL}")
     private String url;
 
-//    @Scheduled(cron = "0 30 11 * * ?", zone = "Asia/Seoul")
-    public void sendNotification(String username, LocalDate date) {
+    @Scheduled(cron = "0 0 8 * * ?", zone = "Asia/Seoul")
+    public void sendNotification() {
         JSONObject data = new JSONObject();
 
-        String content = getContent(username, date);
+        List<User> users = userRepository.findAll();
+        for (User user : users) {
+            String content = sendNotification(user);
 
-        data.put("content", content);
+            data.put("content", content);
 
-        send(data);
+            send(data);
+        }
+
+
     }
 
     private void send(JSONObject object){
@@ -46,6 +56,14 @@ public class WebHookService {
         HttpEntity<String> entity = new HttpEntity<>(object.toString(), headers);
         restTemplate.postForObject(url, entity, String.class);
     }
+
+    public String sendNotification(User user) {
+        String username = user.getUsername();
+//        LocalDate date = LocalDate.now();
+        LocalDate date = LocalDate.now();
+        return getContent(username, date);
+    }
+
 
     /**
      * 사용자에게 알릴 내용을 생성함.

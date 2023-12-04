@@ -20,14 +20,9 @@ public class WebHookController {
     private final WebHookService webHookService;
 
     @PostMapping("/notification")
-    public String postEvent(Authentication auth,
-                            @RequestParam(value = "date", defaultValue = "today") String date) {
+    public String postEvent() {
 
-        if (date.equals("today")) {
-            date = LocalDate.now().toString();
-        }
-
-        webHookService.sendNotification(auth.getName(), LocalDate.parse(date));
+        webHookService.sendNotification();
         return "이벤트 발생!";
     }
 }
