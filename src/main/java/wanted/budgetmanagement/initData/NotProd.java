@@ -7,13 +7,17 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.userdetails.UserDetails;
 import wanted.budgetmanagement.config.security.PasswordEncoderConfig;
 import wanted.budgetmanagement.domain.Category;
+import wanted.budgetmanagement.domain.budget.dto.BudgetResponseDto;
+import wanted.budgetmanagement.domain.budget.entity.Budget;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 import wanted.budgetmanagement.domain.user.entity.CustomUserDetailsManager;
 import wanted.budgetmanagement.domain.user.entity.User;
+import wanted.budgetmanagement.repository.BudgetRepository;
 import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +26,8 @@ import java.util.List;
 public class NotProd {
     @Bean
     CommandLineRunner initData(UserRepository userRepository,
-                               ExpenditureRepository expenditureRepository) {
+                               ExpenditureRepository expenditureRepository,
+                               BudgetRepository budgetRepository) {
 
         PasswordEncoderConfig passwordEncoder = new PasswordEncoderConfig();
 
@@ -42,7 +47,13 @@ public class NotProd {
                     .email("user2@test.com")
                     .build();
 
-            memberList.addAll(List.of(user1, user2));
+            User user3 = User.builder()
+                    .username("user3")
+                    .password(passwordEncoder.passwordEncoder().encode("123"))
+                    .email("user3@test.com")
+                    .build();
+
+            memberList.addAll(List.of(user1, user2, user3));
             userRepository.saveAll(memberList);
 
             // 유저의 지출 등록
@@ -142,6 +153,33 @@ public class NotProd {
             expendityreList.add(도서구입비);
 
             expenditureRepository.saveAll(expendityreList);
+
+            List<Budget> budgetList = new ArrayList<>();
+
+            // 예산 생성
+            Budget budget1 = Budget.builder()
+                    .userId(user1.getId())
+                    .category(Category.음식)
+                    .budget(1000000)
+                    .month(Month.DECEMBER)
+                    .build();
+            // 예산 생성
+            Budget budget2 = Budget.builder()
+                    .userId(user2.getId())
+                    .category(Category.음식)
+                    .budget(600000)
+                    .month(Month.DECEMBER)
+                    .build();
+            // 예산 생성
+            Budget budget3 = Budget.builder()
+                    .userId(user3.getId())
+                    .category(Category.음식)
+                    .budget(400000)
+                    .month(Month.DECEMBER)
+                    .build();
+
+            budgetList.addAll(List.of(budget1,budget2,budget3));
+            budgetRepository.saveAll(budgetList);
         };
     }
 }
