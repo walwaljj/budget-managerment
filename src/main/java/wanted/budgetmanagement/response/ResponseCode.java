@@ -23,6 +23,8 @@ public enum ResponseCode {
     USER_CREATE(HttpStatus.CREATED, "201", "회원 가입 성공"),
     USER_LOGIN(HttpStatus.OK, "200", "로그인 성공"),
     USER_LOGOUT(HttpStatus.NO_CONTENT, "204", "로그 아웃 성공"),
+    USER_ALERT_UPDATE(HttpStatus.OK, "200", "알람 설정 업데이트 성공"),
+
 
     // BUDGET,
     BUDGET_SETTING(HttpStatus.CREATED, "201", "예산 설정 성공"),

@@ -9,12 +9,16 @@ import wanted.budgetmanagement.config.security.PasswordEncoderConfig;
 import wanted.budgetmanagement.config.security.jwt.JwtRequestDto;
 import wanted.budgetmanagement.config.security.jwt.JwtResponseDto;
 import wanted.budgetmanagement.config.security.jwt.JwtUtils;
+import wanted.budgetmanagement.domain.user.dto.AlertRequestDto;
+import wanted.budgetmanagement.domain.user.dto.AlertResponseDto;
 import wanted.budgetmanagement.domain.user.dto.UserRequestDto;
 import wanted.budgetmanagement.domain.user.dto.UserResponseDto;
+import wanted.budgetmanagement.domain.user.entity.Alert;
 import wanted.budgetmanagement.domain.user.entity.CustomUserDetailsManager;
 import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.exception.CustomException;
 import wanted.budgetmanagement.exception.ErrorCode;
+import wanted.budgetmanagement.repository.AlertRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 
 @Service
@@ -27,6 +31,7 @@ public class UserService {
     private final PasswordEncoderConfig passwordEncoder;
     private final CustomUserDetailsManager manager;
     private final JwtUtils jwtUtils;
+    private final AlertRepository alertRepository;
 
     /**
      * 회원가입
@@ -81,4 +86,29 @@ public class UserService {
 
     }
 
+    /**
+     * 알람 설정
+     */
+    public AlertResponseDto alertUpdate(String username, AlertRequestDto alertRequestDto) {
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        Alert alert = Alert.builder()
+                .userId(user.getId())
+                .alarmEnabled(alertRequestDto.isAlarmEnabled())
+                .webHookUrl(alertRequestDto.getWebHookUrl())
+                .build();
+
+        return AlertResponseDto.of(alertRepository.save(alert));
+    }
+
+
+    /**
+     * 알림 설덩을 찾기
+     */
+    public Alert getAlertInfo(User user){
+       return alertRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_ALERT_INFO_NOT_FOUND));
+    }
 }

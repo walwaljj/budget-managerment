@@ -4,14 +4,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.core.userdetails.UserDetails;
 import wanted.budgetmanagement.config.security.PasswordEncoderConfig;
 import wanted.budgetmanagement.domain.Category;
-import wanted.budgetmanagement.domain.budget.dto.BudgetResponseDto;
 import wanted.budgetmanagement.domain.budget.entity.Budget;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
-import wanted.budgetmanagement.domain.user.entity.CustomUserDetailsManager;
+import wanted.budgetmanagement.domain.user.entity.Alert;
 import wanted.budgetmanagement.domain.user.entity.User;
+import wanted.budgetmanagement.repository.AlertRepository;
 import wanted.budgetmanagement.repository.BudgetRepository;
 import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
@@ -27,13 +26,15 @@ public class NotProd {
     @Bean
     CommandLineRunner initData(UserRepository userRepository,
                                ExpenditureRepository expenditureRepository,
-                               BudgetRepository budgetRepository) {
+                               BudgetRepository budgetRepository,
+                               AlertRepository alertRepository) {
 
         PasswordEncoderConfig passwordEncoder = new PasswordEncoderConfig();
 
         return args -> {
             // 유저 생성
             List<User> memberList = new ArrayList<>();
+
 
             User user1 = User.builder()
                     .username("user1")
@@ -55,6 +56,22 @@ public class NotProd {
 
             memberList.addAll(List.of(user1, user2, user3));
             userRepository.saveAll(memberList);
+
+
+            Alert user1Alert = Alert.builder()
+                    .alarmEnabled(true)
+                    .webHookUrl("https://discord.com/api/webhooks/1182224383582937118/IFOI3kLvDpb5_V7hcR7_Nk-rQ20JC_nqKr3xIAp1-lJkxBxE1Zmf3ZUDAuOTd98y7KZ0")
+                    .userId(user1.getId())
+                    .build();
+
+            Alert user2Alert = Alert.builder()
+                    .alarmEnabled(true)
+                    .webHookUrl("https://discord.com/api/webhooks/1098767166314119289/OSsHdyROnkkfwInv8VoCDJ2KBrzo8jwJOEo3Hik3hY8p73PSXmzwrtNdsqnp-ISdRhZ7")
+                    .userId(user2.getId())
+                    .build();
+
+            alertRepository.save(user1Alert);
+            alertRepository.save(user2Alert);
 
             // 유저의 지출 등록
             List<Expenditure> expendityreList = new ArrayList<>();
@@ -178,7 +195,7 @@ public class NotProd {
                     .month(Month.DECEMBER)
                     .build();
 
-            budgetList.addAll(List.of(budget1,budget2,budget3));
+            budgetList.addAll(List.of(budget1, budget2, budget3));
             budgetRepository.saveAll(budgetList);
         };
     }

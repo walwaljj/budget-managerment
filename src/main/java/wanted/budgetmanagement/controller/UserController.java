@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import wanted.budgetmanagement.config.security.jwt.JwtRequestDto;
+import wanted.budgetmanagement.domain.user.dto.AlertRequestDto;
 import wanted.budgetmanagement.domain.user.dto.UserRequestDto;
 import wanted.budgetmanagement.response.CommonResponse;
 import wanted.budgetmanagement.response.ResponseCode;
@@ -71,4 +72,26 @@ public class UserController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
+
+    /**
+     * 알람 업데이트
+     */
+    @Operation(summary = "알람 업데이트", description = "업데이트")
+    @PostMapping("/alert")
+    public ResponseEntity<CommonResponse> alertUpdate(
+            Authentication auth,
+            @RequestBody AlertRequestDto alertRequestDto) {
+
+        ResponseCode alertUpdate = ResponseCode.USER_ALERT_UPDATE;
+
+        return ResponseEntity.ok(
+                CommonResponse.builder()
+                        .responseCode(alertUpdate)
+                        .code(alertUpdate.getCode())
+                        .message(alertUpdate.getMessage())
+                        .data(userService.alertUpdate(auth.getName(), alertRequestDto))
+                        .build()
+        );
+    }
+
 }
