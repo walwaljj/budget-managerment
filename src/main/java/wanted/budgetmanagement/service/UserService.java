@@ -10,7 +10,6 @@ import wanted.budgetmanagement.config.security.jwt.JwtRequestDto;
 import wanted.budgetmanagement.config.security.jwt.JwtResponseDto;
 import wanted.budgetmanagement.config.security.jwt.JwtUtils;
 import wanted.budgetmanagement.domain.user.dto.AlertRequestDto;
-import wanted.budgetmanagement.domain.user.dto.AlertResponseDto;
 import wanted.budgetmanagement.domain.user.dto.UserRequestDto;
 import wanted.budgetmanagement.domain.user.dto.UserResponseDto;
 import wanted.budgetmanagement.domain.user.entity.Alert;
@@ -20,6 +19,8 @@ import wanted.budgetmanagement.exception.CustomException;
 import wanted.budgetmanagement.exception.ErrorCode;
 import wanted.budgetmanagement.repository.AlertRepository;
 import wanted.budgetmanagement.repository.UserRepository;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -89,26 +90,38 @@ public class UserService {
     /**
      * 알람 설정
      */
-    public AlertResponseDto alertUpdate(String username, AlertRequestDto alertRequestDto) {
+    public void alertUpdate(String username, AlertRequestDto alertRequestDto) {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        Alert alert = Alert.builder()
-                .userId(user.getId())
-                .alarmEnabled(alertRequestDto.isAlarmEnabled())
-                .webHookUrl(alertRequestDto.getWebHookUrl())
-                .build();
 
-        return AlertResponseDto.of(alertRepository.save(alert));
+        Optional<Alert> optionalAlert = alertRepository.findByUserId(user.getId());
+
+        Alert alert;
+
+        if(optionalAlert.isEmpty()){
+            alert = Alert.builder()
+                    .userId(user.getId())
+                    .alarmEnabled(alertRequestDto.isAlarmEnabled())
+                    .webHookUrl(alertRequestDto.getWebHookUrl())
+                    .build();
+
+        }else{
+            alert = optionalAlert.get();
+            alert.updateAlert(alertRequestDto.getWebHookUrl(), alertRequestDto.isAlarmEnabled());
+
+        }
+
+        alertRepository.save(alert);
     }
 
 
     /**
      * 알림 설덩을 찾기
      */
-    public Alert getAlertInfo(User user){
-       return alertRepository.findByUserId(user.getId())
+    public Alert getAlertInfo(Integer userId){
+       return alertRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_ALERT_INFO_NOT_FOUND));
     }
 }

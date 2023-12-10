@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,6 +13,8 @@ import org.springframework.web.client.RestTemplate;
 import wanted.budgetmanagement.domain.expenditure.dto.ExpenditureRecommendationResponseDTO;
 import wanted.budgetmanagement.domain.user.entity.Alert;
 import wanted.budgetmanagement.domain.user.entity.User;
+import wanted.budgetmanagement.exception.CustomException;
+import wanted.budgetmanagement.exception.ErrorCode;
 import wanted.budgetmanagement.repository.AlertRepository;
 import wanted.budgetmanagement.repository.UserRepository;
 
@@ -29,16 +30,20 @@ public class WebHookService {
     private final ExpenditureService expenditureService;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final AlertRepository alertRepository;
 
     @Scheduled(cron = "5 * * * * ?", zone = "Asia/Seoul")
     public void sendNotification() {
         JSONObject data = new JSONObject();
 
-        List<User> users = userRepository.findAll();
+        List<Alert> alerts = alertRepository.findAll();
 
-        for (User user : users) {
-            Alert alertInfo = userService.getAlertInfo(user);
+        for (Alert alert : alerts) {
+            Alert alertInfo = userService.getAlertInfo(alert.getUserId());
+
             if (alertInfo.isAlarmEnabled()) { // 알람 수신을 동의한 사람
+
+                User user = userRepository.findById(alert.getUserId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
                 String content = sendNotification(user);
                 data.put("content", content);

@@ -22,4 +22,11 @@ public class Alert {
     private String webHookUrl; // 웹훅 주소
 
     private boolean alarmEnabled; // 알람 활성화 여부 - 기본 true
+
+    public void updateAlert(String webHookUrl, boolean alarmEnabled) {
+        this.webHookUrl = webHookUrl;
+        this.alarmEnabled = alarmEnabled;
+
+    }
+
 }

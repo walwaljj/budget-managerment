@@ -1,6 +1,7 @@
 package wanted.budgetmanagement.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import wanted.budgetmanagement.service.UserService;
 @RequestMapping("v1/users")
 @RequiredArgsConstructor
 @Slf4j
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;
@@ -84,12 +86,13 @@ public class UserController {
 
         ResponseCode alertUpdate = ResponseCode.USER_ALERT_UPDATE;
 
+        userService.alertUpdate(auth.getName(), alertRequestDto);
+
         return ResponseEntity.ok(
                 CommonResponse.builder()
                         .responseCode(alertUpdate)
                         .code(alertUpdate.getCode())
                         .message(alertUpdate.getMessage())
-                        .data(userService.alertUpdate(auth.getName(), alertRequestDto))
                         .build()
         );
     }
