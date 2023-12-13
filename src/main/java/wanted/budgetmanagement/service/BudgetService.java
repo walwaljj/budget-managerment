@@ -3,15 +3,18 @@ package wanted.budgetmanagement.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import wanted.budgetmanagement.domain.Category;
 import wanted.budgetmanagement.domain.budget.dto.BudgetRecommendationRequestDto;
 import wanted.budgetmanagement.domain.budget.dto.BudgetRequestDto;
 import wanted.budgetmanagement.domain.budget.dto.BudgetResponseDto;
 import wanted.budgetmanagement.domain.budget.entity.Budget;
+import wanted.budgetmanagement.domain.budget.entity.BudgetDetail;
 import wanted.budgetmanagement.domain.expenditure.dto.TotalAmountResponseDto;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 import wanted.budgetmanagement.domain.user.entity.User;
 import wanted.budgetmanagement.exception.CustomException;
 import wanted.budgetmanagement.exception.ErrorCode;
+import wanted.budgetmanagement.repository.BudgetDetailRepository;
 import wanted.budgetmanagement.repository.BudgetRepository;
 import wanted.budgetmanagement.repository.ExpenditureRepository;
 import wanted.budgetmanagement.repository.UserRepository;
@@ -29,6 +32,7 @@ public class BudgetService {
     private final BudgetRepository budgetRepository;
     private final UserRepository userRepository;
     private final ExpenditureRepository expenditureRepository;
+    private final BudgetDetailRepository budgetDetailRepository;
 
     /**
      * 예산 설정하기
@@ -37,14 +41,30 @@ public class BudgetService {
 
         User user = findUserByUsername(username);
 
+        Integer percentSum = 0;
+
+        Integer amountSum = 0;
+
+        for (BudgetDetail detail : requestDto.getBudgetDetail()) {
+            percentSum += detail.getPercent();
+            amountSum += detail.getAmount();
+        }
+
+        if (!percentSum.equals(100) || !amountSum.equals(requestDto.getBudget())) {
+            throw new CustomException(ErrorCode.INVALID_AMOUNT_OR_PERCENT);
+        }
+
+        List<BudgetDetail> budgetDetailList = budgetDetailRepository.saveAll(requestDto.getBudgetDetail());
+
         Budget budget = Budget.builder()
                 .userId(user.getId())
-                .category(requestDto.getCategory())
                 .budget(requestDto.getBudget())
                 .month(requestDto.getMonth())
+                .budgetDetails(budgetDetailList)
                 .build();
 
         return BudgetResponseDto.toBudgetResponseDto(budgetRepository.save(budget));
+
     }
 
     /**
@@ -77,6 +97,8 @@ public class BudgetService {
         // 비율을 나눠 저장할 list
         List<TotalAmountResponseDto> recommendationAmountList = new ArrayList<>();
 
+        List<BudgetDetail> budgetDetailList = new ArrayList<>();
+
         for (TotalAmountResponseDto totalAmountResponseDto : totalAmountResponseDtoList) {
 
             // 비율을 구함
@@ -90,14 +112,22 @@ public class BudgetService {
                     .amount(recommendationAmount)
                     .build());
 
-            // 저장
-            budgetRepository.save(Budget.builder()
-                    .userId(user.getId())
+            BudgetDetail budgetDetail = BudgetDetail.builder()
+                    .percent(rate)
+                    .amount(recommendationAmount)
                     .category(totalAmountResponseDto.getCategory())
                     .month(requestDto.getMonth())
-                    .budget(recommendationAmount)
-                    .build());
+                    .build();
+
+            budgetDetailList.add(budgetDetail);
         }
+
+        budgetRepository.save(Budget.builder()
+                .userId(user.getId())
+                .budgetDetails(budgetDetailList)
+                .month(requestDto.getMonth())
+                .budget(requestDto.getTotalBudget())
+                .build());
 
         return recommendationAmountList;
     }

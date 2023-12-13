@@ -7,13 +7,11 @@ import org.springframework.context.annotation.Profile;
 import wanted.budgetmanagement.config.security.PasswordEncoderConfig;
 import wanted.budgetmanagement.domain.Category;
 import wanted.budgetmanagement.domain.budget.entity.Budget;
+import wanted.budgetmanagement.domain.budget.entity.BudgetDetail;
 import wanted.budgetmanagement.domain.expenditure.entity.Expenditure;
 import wanted.budgetmanagement.domain.user.entity.Alert;
 import wanted.budgetmanagement.domain.user.entity.User;
-import wanted.budgetmanagement.repository.AlertRepository;
-import wanted.budgetmanagement.repository.BudgetRepository;
-import wanted.budgetmanagement.repository.ExpenditureRepository;
-import wanted.budgetmanagement.repository.UserRepository;
+import wanted.budgetmanagement.repository.*;
 
 import java.time.LocalDate;
 import java.time.Month;
@@ -27,7 +25,8 @@ public class NotProd {
     CommandLineRunner initData(UserRepository userRepository,
                                ExpenditureRepository expenditureRepository,
                                BudgetRepository budgetRepository,
-                               AlertRepository alertRepository) {
+                               AlertRepository alertRepository,
+                               BudgetDetailRepository budgetDetailRepository) {
 
         PasswordEncoderConfig passwordEncoder = new PasswordEncoderConfig();
 
@@ -172,31 +171,65 @@ public class NotProd {
             expenditureRepository.saveAll(expendityreList);
 
             List<Budget> budgetList = new ArrayList<>();
+            
+            int user1Budget = 1000000;
+            int user2Budget = 600000;
+            int user3Budget = 400000;
 
-            // 예산 생성
+            List<BudgetDetail> user1BudgetList = budgetDetailRepository.saveAll(getBudgetDetails(user1Budget));
             Budget budget1 = Budget.builder()
                     .userId(user1.getId())
-                    .category(Category.음식)
-                    .budget(1000000)
-                    .month(Month.DECEMBER)
+                    .budgetDetails(user1BudgetList)
+                    .month(LocalDate.now().getMonth())
+                    .budget(user1Budget)
                     .build();
+
             // 예산 생성
+            List<BudgetDetail> user2BudgetList = budgetDetailRepository.saveAll(getBudgetDetails(user2Budget));
             Budget budget2 = Budget.builder()
                     .userId(user2.getId())
-                    .category(Category.음식)
-                    .budget(600000)
-                    .month(Month.DECEMBER)
+                    .budgetDetails(user2BudgetList)
+                    .month(LocalDate.now().getMonth())
+                    .budget(user2Budget)
                     .build();
+
             // 예산 생성
+            List<BudgetDetail> user3BudgetList = budgetDetailRepository.saveAll(getBudgetDetails(user3Budget));
             Budget budget3 = Budget.builder()
                     .userId(user3.getId())
-                    .category(Category.음식)
-                    .budget(400000)
-                    .month(Month.DECEMBER)
+                    .budgetDetails(user3BudgetList)
+                    .month(LocalDate.now().getMonth())
+                    .budget(user3Budget)
                     .build();
 
             budgetList.addAll(List.of(budget1, budget2, budget3));
             budgetRepository.saveAll(budgetList);
         };
+    }
+
+    private static List<BudgetDetail> getBudgetDetails(int userBudget) {
+        // 예산 생성
+        BudgetDetail 음식예산 = BudgetDetail.builder()
+                .percent(90)
+                .amount(userBudget / 100 * 90)
+                .category(Category.음식)
+                .month(Month.DECEMBER)
+                .build();
+
+        BudgetDetail 세금예산 = BudgetDetail.builder()
+                .percent(10)
+                .amount(userBudget / 100 * 10)
+                .category(Category.세금)
+                .month(Month.DECEMBER)
+                .build();
+        Result result = new Result(음식예산, 세금예산);
+
+        List<BudgetDetail> budgetDetailList = new ArrayList<>();
+        budgetDetailList.addAll(List.of(result.음식예산(), result.세금예산()));
+
+        return budgetDetailList;
+    }
+
+    private record Result(BudgetDetail 음식예산, BudgetDetail 세금예산) {
     }
 }

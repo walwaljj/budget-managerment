@@ -20,8 +20,9 @@ public enum ErrorCode {
     // SEARCH
     INVALID_RANGE(HttpStatus.BAD_REQUEST, "금액 범위를 확인해주세요."),
 
-    // BUDGET
+    // BUDGET,
     BUDGET_NOT_FOUND(HttpStatus.NOT_FOUND, "예산을 찾을 수 없습니다."),
+    INVALID_AMOUNT_OR_PERCENT(HttpStatus.BAD_REQUEST, "예산 설정 금액 또는 퍼센트를 확인해주세요. 카테고리 금액 합이 설정하는 총 예산과 같게 설정하거나, 퍼센트의 합을 100 으로 맞춰 주세요."),
     BUDGET_EXISTS(HttpStatus.CONFLICT,"이미 설정한 예산이 있습니다." );
 
 

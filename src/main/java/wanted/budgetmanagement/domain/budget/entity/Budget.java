@@ -5,9 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import wanted.budgetmanagement.domain.Category;
 
 import java.time.Month;
+import java.util.List;
 
 
 /**
@@ -26,11 +26,13 @@ public class Budget {
 
     private Integer userId;
 
-    @Enumerated(EnumType.STRING)
-    private Category category; // 카테고리
+    private Integer budget; // 총 예산
 
-    private Integer budget; // 예산
+    @OneToMany
+    private List<BudgetDetail> budgetDetails;
 
     private Month month; // 예산이 적용될 월
+
+
 
 }
